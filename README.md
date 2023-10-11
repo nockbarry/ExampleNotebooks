@@ -14,4 +14,5 @@ The rest of the notebook explores other classifcation methods on the same data, 
 
 ## randomstring_classification.ipynb
 This notebook explores an NLP problem of classifing short strings of gibberish letters. It contains a synthetic data generation procedure for plausible real data from Faker and gibberish/random string emails. It tests a few encodings, count, ngram, tfidf , trandiitonal classification models using sklearn and keras neural network models, as well as some anomaly detection methods. Compares model performance in prediction and compute time across all of these parameters.
+
 The second document with the _undersampling name compares undersampling data and minimal data requirments for model performance using hold out data. 
