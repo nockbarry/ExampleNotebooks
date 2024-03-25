@@ -16,3 +16,7 @@ The rest of the notebook explores other classifcation methods on the same data, 
 This notebook explores an NLP problem of classifying short strings of gibberish letters. It contains a synthetic data generation procedure for plausible real data from Faker and gibberish/random string emails. It tests a few encodings, count, ngram, tfidf , trandiitonal classification models using sklearn and keras neural network models, as well as some anomaly detection methods. Compares model performance in prediction and compute time across all of these parameters.
 <br>
 The second document with the _undersampling name compares undersampling data and minimal data requirements for model performance using hold out data. 
+
+## xgboost_model_analysis.ipynb
+
+This Python notebook includes a collection of functions and library imports for machine learning applications, focusing on data preprocessing, model training, evaluation, and visualization. Libraries such as Numpy, Pandas, XGBoost, Matplotlib, Seaborn, SHAP, and Scikit-Learn are imported for various tasks. Functions are provided to preprocess data, split datasets, compute permutation importance, plot learning curves, tune hyperparameters, display search results, evaluate models, plot Partial Dependence Plots (PDPs), detect high leverage points, and analyze model residuals. This script is structured to support machine learning projects, particularly those involving classification tasks and model interpretability analyses.
