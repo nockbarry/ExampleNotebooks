@@ -1,6 +1,10 @@
 # ExampleNotebooks
 This is a repository containing some jupyter notebooks that I used to explore various concepts in classification and model training.
 
+## Bokeh Network Plots
+Explores some interactions for a graph with different node types with edges that have timestamps in networkx plotting with bokeh.
+Preview: https://html-preview.github.io/?url=https://github.com/nockbarry/ExampleNotebooks/blob/main/bokeh_network_plotting.html
+
 ##  discrete user action sequence analysis_transition prob and ngrams.ipynb
 This notebook explores discrete user action/transaciton sequences and grouping those sequences, in general, and for defining specific subsequences. The goal is to show methods to compare different types of subsequences of user activity, by measuring thier transition probablity differences between actions, and the ngrams of actions, as well as the replacement of common action sequences with meta_action sequences as to increase visability for transition prob and ngram analysis.
 
