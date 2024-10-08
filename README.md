@@ -19,6 +19,9 @@ Key Features:
 
 The primary goal of the ModelTestSuite is to facilitate the exploration and comparison of multiple combinations of feature configurations, models, and cross-validation techniques. By automating much of the repetitive setup work involved in testing these configurations, the tool helps users focus on interpreting results and improving model performance, rather than spending time on manual configuration.
 
+## weaksupervision_examples.ipynb
+the code combines multiple machine learning techniques for weakly supervised learning by integrating probabilistic label functions, deep learning, and factor analysis. it generates synthetic datasets, applies probabilistic label functions using multivariate normal distributions, and uses the snorkel model to combine noisy labels through expectation-maximization. the fa model leverages feature and label function embeddings, while factor analysis reduces dimensionality and applies logistic regression on the reduced data. more advanced methods like gplvm-svgp incorporate gaussian processes for latent variable modeling, and vi-fa uses variational inference to optimize posterior distributions with kl-divergence regularization. each version refines the handling of noisy labels, imbalanced data, and posterior inference to improve classification performance.
+
 ## Bokeh Network Plots
 Explores some interactions for a graph with different node types with edges that have timestamps in networkx plotting with bokeh.
 Preview: https://html-preview.github.io/?url=https://github.com/nockbarry/ExampleNotebooks/blob/main/bokeh_network_plotting.html
