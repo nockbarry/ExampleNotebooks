@@ -1,5 +1,21 @@
+
+# Summary of Graph Analysis and Modeling in Real Time on AWS
 https://chatgpt.com/share/670d62bf-2868-800a-844e-269e690372bc
 
+In this conversation, we explored various technology stacks and their associated costs for implementing Graph Neural Networks (GNNs) and Graph Analytics to detect fraud in real-time or near real-time on a government services website. We discussed options for the different layers of the stack, including GNN frameworks, graph databases, compute resources, storage solutions, and distributed processing frameworks, all within the AWS cloud environment.
+
+We evaluated several combinations of these components, including:
+
+- TensorFlow GNN with Amazon Neptune and EC2 or SageMaker.
+- PyTorch Geometric with Neo4j or TigerGraph and EC2.
+- Deep Graph Library (DGL) with TigerGraph and AWS EKS.
+- Apache Spark with GraphFrames on AWS EMR.
+
+For each stack, we identified the prohibitive factors, such as data transfer costs, performance bottlenecks, and management overhead, as well as the best parts, such as scalability, ease of use, and integration with other AWS services.
+
+Additionally, we calculated potential monthly costs based on an equivalent problem size of a graph with 10 billion edges, 800,000 nodes with 5 features each, and 2 million edges added per day. We examined the impact of data transfer fees, compute costs, and scaling considerations in various scenarios. Potential hidden costs like licensing fees, data transfer between services (e.g., Neptune to S3, EC2 to S3), and idle compute time were also analyzed.
+
+Lastly, we highlighted the worst-case scenarios for each stack, discussing what could "fuck us the most," focusing on unanticipated data transfer fees and performance inefficiencies that could significantly inflate costs. The conversation concluded with a comparison of the different stacks, outlining which setups were most cost-effective and which carried higher financial risks due to hidden complexities.
 
 # User
 Write a well researched report the like of which Mitre/MITRE or Gartner would write as an advanced technical report on implementing Graph Analytics and Graph Neural Networks (GNNs) to prevent fraud in realtime or near real time on a government services website with millions of events per day. It needs to cover the interrelated components of various tech stacks, what choices preclude what options at every level of the stack. For example if we use TF-GNN does that limit what compute or storage options we have? Cover different graph and tabular database options, compute and data storage options, distributed options for those, the graph packages and technologies and every level of the tech stack. Write the report like that where we have a sophisticated understanding of the decision landscape. Assume we are in a AWS cloud environment with most of any of options on there available. There should be at least 1 table that acts as a kind of decision matrix, with rows for each option in the stack and columns describing the differences between the other options in the stack. The report should be professional and clear, and most importantly, accurate technically.
