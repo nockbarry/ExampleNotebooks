@@ -13,9 +13,26 @@ We evaluated several combinations of these components, including:
 
 For each stack, we identified the prohibitive factors, such as data transfer costs, performance bottlenecks, and management overhead, as well as the best parts, such as scalability, ease of use, and integration with other AWS services.
 
-Additionally, we calculated potential monthly costs based on an equivalent problem size of a graph with 10 billion edges, 800,000 nodes with 5 features each, and 2 million edges added per day. We examined the impact of data transfer fees, compute costs, and scaling considerations in various scenarios. Potential hidden costs like licensing fees, data transfer between services (e.g., Neptune to S3, EC2 to S3), and idle compute time were also analyzed.
+Additionally, we calculated potential monthly costs based an in-depth analysis of implementing **Graph Analytics** and **Graph Neural Networks (GNNs)** for fraud detection on a large-scale government services website, focusing on the **costs** associated with training, data processing, and modeling. The dataset includes **10 billion edges** and **3 billion nodes**, with **2 million edges** and **800,000 nodes** added daily, each node and edge containing 5 features. We examine both **production-ready environments** and **experimental setups**, estimating costs for training, testing, and processing.
 
-Lastly, we highlighted the worst-case scenarios for each stack, discussing what could "fuck us the most," focusing on unanticipated data transfer fees and performance inefficiencies that could significantly inflate costs. The conversation concluded with a comparison of the different stacks, outlining which setups were most cost-effective and which carried higher financial risks due to hidden complexities.
+Lastly, we highlighted the worst-case scenarios for each stack, discussing what could "f--k us the most," focusing on unanticipated data transfer fees and performance inefficiencies that could significantly inflate costs. The conversation concluded with a comparison of the different stacks, outlining which setups were most cost-effective and which carried higher financial risks due to hidden complexities.
+
+**Key Cost Findings:**
+
+1. **Storage Costs**: Storing the graph data (260 GB initially, growing by 56 MB/day) is relatively low. Amazon S3 provides the most cost-effective option at $6.02/month, scaling to $6.45/month over a year.
+    
+2. **ETL/Preprocessing Costs**: Daily data transformations using AWS Glue cost $52.8/month but could rise to $105.6/month with heavier workloads.
+    
+3. **Model Training Costs**: Training GNNs on AWS SageMaker (using p3.2xlarge instances) costs $492/month, scaling to $1,500/month with distributed training. Using EC2 instances can slightly reduce costs to $367.2/month, scaling up to $1,468.8/month.
+    
+4. **Hyperparameter Tuning**: Weekly tuning adds $262.4/month, with potential scaling to $1,968/month for daily jobs.
+    
+5. **Worst-Case Cost Risks**: The highest costs come from scaling GNN training across multiple GPU instances, frequent hyperparameter tuning, and high query load on graph databases like Amazon Neptune or TigerGraph. These costs can exceed $10,000/month in extreme cases.
+
+**Experimentation Costs**: For a typical experimentation setup (ignoring production serving costs), the base monthly cost is around $813/month, which could rise to $3,548/month with more frequent or intensive model training and testing.
+
+**Recommendations**: Use managed services (Neptune, SageMaker) where possible to minimize operational complexity, batch process data to reduce real-time ingestion costs, and closely monitor scaling thresholds for auto-scaling and hyperparameter tuning to prevent runaway expenses.
+
 
 # User
 Write a well researched report the like of which Mitre/MITRE or Gartner would write as an advanced technical report on implementing Graph Analytics and Graph Neural Networks (GNNs) to prevent fraud in realtime or near real time on a government services website with millions of events per day. It needs to cover the interrelated components of various tech stacks, what choices preclude what options at every level of the stack. For example if we use TF-GNN does that limit what compute or storage options we have? Cover different graph and tabular database options, compute and data storage options, distributed options for those, the graph packages and technologies and every level of the tech stack. Write the report like that where we have a sophisticated understanding of the decision landscape. Assume we are in a AWS cloud environment with most of any of options on there available. There should be at least 1 table that acts as a kind of decision matrix, with rows for each option in the stack and columns describing the differences between the other options in the stack. The report should be professional and clear, and most importantly, accurate technically.
@@ -23,39 +40,9 @@ Write a well researched report the like of which Mitre/MITRE or Gartner would wr
 # Response
 # Implementing Graph Analytics and Graph Neural Networks for Real-Time Fraud Detection on Government Services Websites
 
-**Prepared by:** [Your Name]
+**Prepared by:** gpt o1 preview 
 
 **Date:** October 14, 2024
-
----
-
-## Table of Contents
-
-1. [Introduction](#introduction)
-2. [Technical Stack Components](#technical-stack-components)
-3. [Graph Neural Network Frameworks](#graph-neural-network-frameworks)
-   - 3.1 [TensorFlow GNN (TF-GNN)](#tensorflow-gnn-tf-gnn)
-   - 3.2 [PyTorch Geometric](#pytorch-geometric)
-   - 3.3 [Deep Graph Library (DGL)](#deep-graph-library-dgl)
-4. [Graph Databases](#graph-databases)
-   - 4.1 [Amazon Neptune](#amazon-neptune)
-   - 4.2 [Neo4j](#neo4j)
-   - 4.3 [TigerGraph](#tigergraph)
-5. [Tabular Databases](#tabular-databases)
-6. [Compute Options](#compute-options)
-   - 6.1 [Amazon EC2](#amazon-ec2)
-   - 6.2 [Amazon SageMaker](#amazon-sagemaker)
-   - 6.3 [Amazon EKS and ECS](#amazon-eks-and-ecs)
-7. [Storage Options](#storage-options)
-   - 7.1 [Amazon S3](#amazon-s3)
-   - 7.2 [Amazon EBS and EFS](#amazon-ebs-and-efs)
-8. [Distributed Processing Frameworks](#distributed-processing-frameworks)
-   - 8.1 [Apache Spark and GraphX](#apache-spark-and-graphx)
-   - 8.2 [AWS EMR and AWS Glue](#aws-emr-and-aws-glue)
-9. [Interrelated Component Choices](#interrelated-component-choices)
-10. [Decision Matrix](#decision-matrix)
-11. [Recommendations](#recommendations)
-12. [Conclusion](#conclusion)
 
 ---
 
@@ -953,285 +940,437 @@ Here's a concise summary of your options for each layer of the stack, highlighti
 Trade-offs are between ease of management (managed services like Neptune, SageMaker) and flexibility/control (EC2, self-managed databases).
 
 # User
-Calculate the cost differences for all of our options given an equivalent problem. Say a graph the has 10 billion edges, with 2 million added per day, 800,000 nodes with 5 features each, that have to be processed
+Calculate the cost differences for all of our options given an equivalent problem. Say a graph the has 10 billion edges, and 3 billion nodes. 2 million edges are added per day, as well as 800,000 nodes with 5 features for each edge and node, all of which have to be processed. Calculate the storage and usage costs, especially focusing on how it could be used in the real world with data coming in, and the models being trained regularly. So assume a moderate up time for training, even every day for some production models. Perform additional analysis on what could fuck us the most for each configuration, ie where the worst scaling costs are for each option.
 
 # Response
-To calculate the cost differences between your options for processing a graph with **10 billion edges**, **800,000 nodes** (each with 5 features), and **2 million edges added per day**, we will compare the most relevant stack components in terms of compute, storage, and database costs.
+To calculate the cost differences for various options in the stack, I’ll break down the analysis by key factors: storage, compute, and processing costs, focusing on the AWS environment (since it offers all the components we're considering). I’ll outline the assumptions, perform the cost analysis based on AWS pricing as of 2024, and identify potential cost bottlenecks and scalability risks for each configuration.
 
-Let’s break down the requirements and assumptions:
-
-- **Data Size (Graph):**  
-  - Assume that each edge consumes 100 bytes (enough for an edge ID, source node, destination node, and any properties), giving **1TB** of storage for 10 billion edges.
-  - Each node has 5 features; assuming each feature takes 10 bytes, that gives **40 MB** of data for the 800,000 nodes (ignoring indexing overhead).
-
-- **Processing:**  
-  - We assume the model needs to be trained once per day using GNNs to process the graph data, with inference performed in real-time.
-  - Both **compute** for training and **storage** for graph data will scale with the size of the graph.
-
-### **Assumptions:**
-- AWS prices can vary by region and usage patterns.
-- Using GPU-backed instances for GNN training.
-- Assume processing occurs once per day for the full graph, and real-time inference is ongoing.
-- Pricing is calculated on **per month** basis, assuming 30-day use for simplicity.
-
----
-
-## **1. Compute Costs**
-
-### **EC2 Instances (Amazon EC2 P3 – GPU Instances)**
-- **P3.2xlarge (1 NVIDIA V100 GPU)**: $3.06 per hour.
-- **Training Time**: Assume 10 hours per day to process and train on the entire graph.
-- **Inference**: We use smaller instances, such as **g4dn.xlarge** ($0.75 per hour).
-
-#### **Costs:**
-- **Training**: 10 hours/day * 30 days * $3.06 = **$918/month**
-- **Inference**: 24 hours/day * 30 days * $0.75 = **$540/month**
+### Assumptions
+- **Data Size:**
+  - 3 billion nodes with 5 features each
+  - 10 billion edges with 5 features each
+  - Nodes and edges are updated regularly: 800,000 nodes and 2 million edges added daily.
   
-**Total EC2 Cost (per month)**: **$1,458**
+  Approximate feature sizes:
+  - Assume each feature is a float (4 bytes).
+  - Each node’s feature data: \(5 \times 4 = 20\) bytes per node.
+  - Each edge’s feature data: \(5 \times 4 = 20\) bytes per edge.
 
-### **SageMaker (Managed Service)**
-- **Training (ml.p3.2xlarge)**: $4.58 per hour.
-- **Training Time**: Same as above (10 hours/day).
-- **Inference**: SageMaker Endpoint (ml.g4dn.xlarge): $0.75 per hour.
+  **Daily data ingestion:**
+  - \(800,000 \times 20\) bytes for nodes = 16 MB/day.
+  - \(2,000,000 \times 20\) bytes for edges = 40 MB/day.
+  - Total new data per day = 56 MB.
 
-#### **Costs:**
-- **Training**: 10 hours/day * 30 days * $4.58 = **$1,374/month**
-- **Inference**: 24 hours/day * 30 days * $0.75 = **$540/month**
+### 1. **Amazon Neptune**
 
-**Total SageMaker Cost (per month)**: **$1,914**
-
----
-
-## **2. Graph Database Costs**
-
-### **Amazon Neptune**
-- **Storage Cost**: $0.10/GB per month (assuming 1TB for edges, and minimal node storage overhead).
-- **Read/Write Requests**:  
-  - Assume 10 million requests per day (reads/writes), cost is $0.20 per million requests.
-
-#### **Costs:**
-- **Storage**: 1TB * $0.10 = **$102/month** (rounded)
-- **Read/Write Operations**: 10 million requests/day * 30 days * $0.20/million = **$60/month**
-
-**Total Neptune Cost (per month)**: **$162**
-
-### **Neo4j (self-hosted)**
-- **EC2 Cost (m5.4xlarge)**: $0.96 per hour, with 1TB of EBS storage for the graph.
-- **Read/Write Requests**: You would manage this on your EC2 instance.
-
-#### **Costs:**
-- **Compute**: 24 hours/day * 30 days * $0.96 = **$691/month**
-- **EBS Storage**: 1TB of gp2 EBS at $0.10 per GB = **$102/month**
-
-**Total Neo4j Cost (per month)**: **$793**
-
-### **TigerGraph (self-hosted)**
-- **Compute (r5.8xlarge)**: $2.15 per hour.
-- **Storage**: TigerGraph requires EBS, similar to Neo4j.
-
-#### **Costs:**
-- **Compute**: 24 hours/day * 30 days * $2.15 = **$1,548/month**
-- **EBS Storage**: 1TB of gp2 EBS at $0.10 per GB = **$102/month**
-
-**Total TigerGraph Cost (per month)**: **$1,650**
-
----
-
-## **3. Storage Costs**
-
-### **Amazon S3**
-- **Storage**: 1TB at $0.023 per GB per month.
-- **Data Transfer**: Assume some minimal data transfer to/from S3 for training.
-
-#### **Costs:**
-- **S3 Storage**: 1TB * $0.023 = **$23/month**
-
-### **Amazon EFS (for shared file access)**
-- **Storage**: 1TB at $0.30 per GB (General Purpose).
-
-#### **Costs:**
-- **EFS Storage**: 1TB * $0.30 = **$307/month**
-
----
-
-## **4. Distributed Processing**
-
-### **AWS Glue**
-- **ETL Jobs**: Glue pricing is based on Data Processing Units (DPUs), which cost $0.44 per DPU-hour. Assume 10 DPU-hours/day for processing.
-
-#### **Costs:**
-- **Glue**: 10 DPU-hours/day * 30 days * $0.44 = **$132/month**
-
-### **Apache Spark on EMR**
-- **Cluster (m5.xlarge)**: $0.192 per hour per node. Assume 10 nodes for the cluster.
-
-#### **Costs:**
-- **EMR Cluster**: 10 nodes * 24 hours/day * 30 days * $0.192 = **$1,382/month**
-
----
-
-## **Summary of Monthly Costs**
-
-| **Option**                      | **Compute**    | **Graph Database** | **Storage**  | **Distributed Processing** | **Total**      |
-|----------------------------------|----------------|--------------------|--------------|----------------------------|----------------|
-| **EC2 + Neptune**                | $1,458         | $162               | $23 (S3)     | $132 (Glue)                 | **$1,775**     |
-| **SageMaker + Neptune**          | $1,914         | $162               | $23 (S3)     | $132 (Glue)                 | **$2,231**     |
-| **EC2 + Neo4j**                  | $1,458         | $793               | $102 (EBS)   | $1,382 (EMR)                | **$3,735**     |
-| **SageMaker + TigerGraph**       | $1,914         | $1,650             | $102 (EBS)   | $1,382 (EMR)                | **$5,048**     |
-
----
-
-### **Key Takeaways:**
-
-- **Best Budget Option:** **EC2 + Neptune** at **$1,775/month**. This is the most cost-effective option, leveraging fully managed Neptune and avoiding the high costs of self-hosted databases.
+#### **Storage Costs:**
+- **Node and Edge Storage:** Amazon Neptune charges based on the total storage volume.
+- **Initial Storage for 3B Nodes + 10B Edges:**
+  - Nodes: \(3B \times 20 \text{ bytes} = 60 \text{ GB}\).
+  - Edges: \(10B \times 20 \text{ bytes} = 200 \text{ GB}\).
+  - **Total Storage (initial):** 260 GB.
   
-- **Managed and Scalable Option:** **SageMaker + Neptune** at **$2,231/month**. More expensive than EC2, but SageMaker simplifies management and scales easily.
+- **Growth per day:** 56 MB/day.
 
-- **Self-Hosted Complex Option:** **EC2 + Neo4j** at **$3,735/month**. Neo4j offers flexibility but requires more management and higher costs for compute and storage.
+- **Neptune Pricing (as of 2024):**
+  - Storage: $0.10 per GB per month.
+  - **Cost (initial storage):** \(260 \times 0.10 = 26\) USD/month.
+  - **Cost (annual growth):** \(56 \text{ MB/day} \times 365 = 20.4 \text{ GB/year}\).
+  - Additional cost/year: \(20.4 \times 0.10 = 2.04\) USD/year.
 
-- **High-Performance Enterprise Option:** **SageMaker + TigerGraph** at **$5,048/month**. TigerGraph provides real-time graph analytics at a premium cost, but it's highly performant for large-scale graph computations.
+#### **Compute Costs:**
+- For model training and querying, assume two r6g.8xlarge Neptune instances (32 vCPUs, 256 GB RAM) for both training and real-time querying.
+  
+  **Pricing:**
+  - $4.10 per hour (on-demand).
+  - Training models daily: 4 hours/day.
+  - **Monthly cost:** \(4.10 \times 4 \times 30 = 492\) USD/month.
 
-Let me know if you want to fine-tune this further!
+#### **Cost Bottleneck for Scaling:**
+- **Query Load:** As the graph grows, complex queries (e.g., traversing billions of edges) can significantly degrade performance. To mitigate this, more read replicas are required, driving up cost:
+  - **Neptune Read Replica:** $4.10/hour. With heavy query loads, you may need 2-3 replicas, adding up to \(4.10 \times 3 \times 24 \times 30 = 8,856\) USD/month for replicas.
+  
+#### **Total Neptune Costs:**
+- Initial storage + compute: $26 + $492 = $518/month.
+- Replicas and additional scaling for querying: $8,856/month (worst case).
+
+---
+
+### 2. **Neo4j on EC2**
+
+#### **Storage Costs:**
+- **Storage Size:** Similar to Neptune, 260 GB initial.
+- **Storage Type:** Use Amazon EBS (gp3 volumes).
+  - $0.08/GB per month.
+  - **Cost (initial):** \(260 \times 0.08 = 20.8\) USD/month.
+
+#### **Compute Costs:**
+- Assume two r6g.8xlarge EC2 instances for compute (same configuration as Neptune).
+- On-demand pricing: $2.72/hour.
+- **Daily model training:** 4 hours/day.
+- **Monthly cost:** \(2.72 \times 4 \times 30 = 326.4\) USD/month.
+
+#### **Cost Bottleneck for Scaling:**
+- **Write-heavy Load:** Neo4j is not optimized for high write throughput without tuning, and regular updates of 2 million edges + 800k nodes per day could cause bottlenecks, especially as the graph grows. You’d need additional EC2 instances to handle write performance.
+- Adding 2 more EC2 instances to handle heavy writes adds: \(2 \times 2.72 \times 24 \times 30 = 3,916.8\) USD/month.
+
+#### **Total Neo4j Costs:**
+- Initial storage + compute: $20.8 + $326.4 = $347.2/month.
+- Adding more compute to handle writes: $3,916.8/month (worst case).
+
+---
+
+### 3. **TigerGraph on EC2**
+
+#### **Storage Costs:**
+- **Storage Size:** Similar to Neptune and Neo4j, 260 GB initial.
+- **Storage Type:** Amazon EBS (gp3 volumes).
+  - $0.08/GB per month.
+  - **Cost (initial):** $20.8/month.
+
+#### **Compute Costs:**
+- TigerGraph pricing can be costly due to enterprise licensing (estimated $5k/month for enterprise features).
+- Compute needs (r6g.8xlarge EC2 instances) for querying and analytics:
+  - Assume 4 instances for high throughput: \(2.72 \times 4 \times 24 \times 30 = 7,833.6\) USD/month.
+
+#### **Cost Bottleneck for Scaling:**
+- **High Query Load:** As TigerGraph is built for deep link analytics, querying large subgraphs will scale better than Neptune or Neo4j, but the cost escalates quickly due to licensing fees and additional compute instances. If deep link analytics and frequent writes are required, expect costs to exceed $10k/month for 4+ EC2 instances and TigerGraph licenses.
+
+#### **Total TigerGraph Costs:**
+- Storage + compute: $20.8 + $7,833.6 = $7,854.4/month.
+- With licensing fees: Estimate around $12,854.4/month.
+
+---
+
+### 4. **Compute with SageMaker vs EC2**
+
+#### **SageMaker:**
+
+- **Instance Type:** ml.p3.2xlarge (8 vCPUs, 1 GPU).
+- **Cost:** $4.10/hour.
+- Training models 4 hours/day for 30 days.
+- **Monthly cost:** \(4.10 \times 4 \times 30 = 492\) USD/month.
+
+#### **EC2:** 
+
+- **Instance Type:** p3.2xlarge (same configuration as SageMaker).
+- **On-demand Cost:** $3.06/hour.
+- Training models 4 hours/day for 30 days.
+- **Monthly cost:** \(3.06 \times 4 \times 30 = 367.2\) USD/month.
+
+#### **Cost Bottleneck for Scaling:**
+- **SageMaker:** Can become expensive due to convenience and additional management costs (e.g., hyperparameter tuning or automatic scaling). 
+  - Scaling to multiple GPU instances daily could cost $1,000 - $2,000/month.
+- **EC2:** Cheaper but requires manual management and orchestration, adding operational complexity.
+
+#### **Total Compute Costs:**
+- SageMaker: $492/month for single-instance training.
+- EC2: $367.2/month for single-instance training.
+
+---
+
+### 5. **Distributed Processing with PyTorch Distributed (on EC2)**
+
+#### **Costs for Distributed Compute:**
+
+- Assume using 4 EC2 p3.2xlarge instances (8 vCPUs, 1 GPU each).
+- **On-demand cost per instance:** $3.06/hour.
+- Training time: 4 hours/day across all instances.
+- **Monthly cost:** \(3.06 \times 4 \times 4 \times 30 = 1,468.8\) USD/month.
+
+#### **Cost Bottleneck for Scaling:**
+- **Increasing Node Count:** For very large graph datasets (10B+ edges), the number of instances needed will grow rapidly. If training times increase and more instances are needed, scaling could easily lead to $5,000 - $10,000/month in distributed GPU costs.
+
+---
+
+### Summary of Costs and Worst-Case Scenarios:
+
+| **Component**         | **Base Monthly Cost (Low Use)** | **Worst-Case Monthly Cost (High Scaling)** |
+|-----------------------|-------------------------------|-------------------------------------------|
+| **Amazon Neptune**     | $518                          | $8,856 (with read replicas)               |
+| **Neo4j (EC2)**        | $347.2                        | $3,916.8 (with added write instances)     |
+| **TigerGraph (EC2)**   | $7,854.4                      | $12,854.4 (with licensing)                |
+| **SageMaker Compute**  | $492                          | $1,500 (with scaling)                     |
+| **EC2 Compute (P3)**   | $367.2                        | $1,468.8 (distributed PyTorch)            |
+| **Distributed PyTorch**| $1,468.8                      | $5,000 - $10,000 (for larger graphs)      |
+
+### Key Cost Risks (Where Costs Could Skyrocket):
+
+1. **Neptune:** Scaling for heavy read queries leads
+
+ to significant replica costs.
+2. **Neo4j:** Heavy write loads require more compute, which inflates EC2 costs quickly.
+3. **TigerGraph:** Licensing fees combined with compute costs make it expensive for high-throughput analytics.
+4. **SageMaker:** Automatic scaling and convenience could lead to high costs, especially with multiple GPUs.
+5. **PyTorch Distributed:** Distributed GPU compute can easily exceed $5,000 - $10,000/month as the dataset and training time scale up. 
+
+In conclusion, **TigerGraph** is the most prohibitive overall due to high costs from licensing and compute, while **Neptune** and **SageMaker** offer more reasonable initial costs but could scale significantly if usage spikes. **PyTorch Distributed** also presents scaling risks for large datasets.
+
+There are a few additional considerations we haven’t fully covered yet, particularly around **network costs**, **data transfer**, and **operational costs**, as well as some nuanced **scaling risks** related to the real-world implementation of these stacks. Let’s quickly highlight these areas:
+
+### 1. **Data Transfer Costs**
+- **Data Transfer Between AWS Services:** 
+  - When transferring data between services (e.g., Neptune to SageMaker or EC2), there are usually no charges for data transfer within the same region. However, data transfers between regions or from AWS to external services incur costs.
+  - **Potential Bottleneck:** In setups like TigerGraph or Neo4j on EC2, if you're transferring large datasets from Amazon S3 or other storage, the cost could rise. For instance, if transferring 100 GB/month between regions or external endpoints, the cost could reach up to $0.09/GB, resulting in $9/month.
+  
+  - **Recommendation:** Try to keep everything in the same region to avoid these costs, but be mindful that cross-region backups or multi-region architectures will increase transfer costs.
+
+### 2. **Network Costs for Real-Time Processing**
+- **Real-Time Data Ingestion Costs:** 
+  - If using services like **AWS Kinesis** or **Amazon SQS** to ingest and process data in real-time (2M edges and 800k nodes added per day), the volume of events can cause noticeable costs.
+  - **Kinesis Pricing Example:** $0.015 per shard hour, plus $0.036 per million PUT payloads.
+    - With 2 million edges/day and 800k nodes, at least 3M PUTs per day = $108/month for 90M PUTs/month.
+
+- **Recommendation:** Use **batch processing** where possible to aggregate data instead of processing every transaction individually in real-time. This reduces Kinesis/streaming costs.
+
+### 3. **Operational Complexity Costs**
+- **Management Overhead:** 
+  - Self-managed EC2-based solutions (Neo4j, TigerGraph) require ongoing **DevOps** efforts for scaling, backup, security, updates, and general system maintenance. This introduces **labor costs** and potential **downtime risks** that can increase the total cost of ownership (TCO). 
+  - **Prohibitive Factor:** If you don't have a dedicated DevOps team, this could lead to costly cloud consulting or managed service provider contracts.
+  
+  - **Recommendation:** If you don't have a team to manage Neo4j or TigerGraph, lean toward managed services like **Amazon Neptune** or **SageMaker**.
+
+### 4. **Cost of Experimentation (Training Frequency)**
+- **Model Retraining Frequency:** 
+  - We assumed moderate daily training times for production models, but in reality, **GNN retraining** could be much more frequent, especially if **data drift** (e.g., new fraud patterns emerging) becomes a significant issue.
+  - **Prohibitive Factor:** Frequent retraining (multiple times per day) with large datasets increases compute costs significantly. In addition, hyperparameter tuning runs can double or triple training costs on **SageMaker** if using built-in tuning jobs.
+  
+  - **Recommendation:** Use **cost-effective training techniques**, such as **transfer learning** or **incremental training**, to avoid full re-training of the entire graph each time.
+
+### 5. **Storage Growth Beyond Edges and Nodes**
+- **Historical Data Retention:** 
+  - **Long-term retention** of transaction logs, audit trails, and fraud detection metadata can significantly increase storage costs. We focused on nodes and edges with their associated features, but in production, you also have:
+    - Logs of predictions (likely stored for compliance).
+    - Metadata for retraining models (e.g., edge/node feature histories).
+  
+  - **Recommendation:** Use **intelligent storage tiering** with Amazon S3 (e.g., move historical data to **S3 Glacier**) to minimize storage costs for infrequently accessed data.
+
+### 6. **Fault Tolerance and High Availability (HA)**
+- **Redundancy for High Availability:**
+  - High availability setups (e.g., for Neo4j or TigerGraph on EC2) require redundant instances in multiple availability zones (AZs). This **doubles or triples compute costs** to ensure availability during failure scenarios.
+  
+  - **Prohibitive Factor:** Implementing HA is essential for mission-critical applications, but it drastically increases EC2 instance costs. With Neo4j or TigerGraph, this could mean doubling the baseline instance cost of $3,916/month to $7,833/month for high availability.
+  
+  - **Recommendation:** Carefully assess HA needs and leverage managed solutions (e.g., Neptune’s read replicas) to avoid overprovisioning compute resources.
+
+### 7. **Auto-scaling Risks**
+- **Unanticipated Scaling:** 
+  - If using **auto-scaling** on EC2 or SageMaker, unexpected traffic spikes (e.g., during fraud attacks or system testing) can lead to **uncontrolled scaling**. This can result in unplanned cost increases if instances are scaled too aggressively.
+  
+  - **Prohibitive Factor:** Without proper cost monitoring and scaling thresholds, a sudden increase in fraudulent activity could lead to runaway costs for both compute and data processing (e.g., Kinesis).
+  
+  - **Recommendation:** Set **strict auto-scaling limits** and use **AWS Budgets** or **Cost Explorer** to track unexpected spikes.
+
+---
+
+### Conclusion
+
+Overall, the most critical areas where costs can spiral out of control include:
+
+1. **Data Transfer Costs** between regions or external services.
+2. **Real-time Processing Costs** if relying on Kinesis or SQS for constant data ingestion.
+3. **Operational Complexity** with self-managed solutions like Neo4j or TigerGraph, where scaling and maintenance costs can increase.
+4. **Frequent Retraining** and **hyperparameter tuning** for GNN models that may require more GPU resources than planned.
+5. **High Availability** setups that double or triple EC2 costs in self-hosted environments.
+
+To mitigate these issues:
+- **Leverage managed services** where possible (e.g., Neptune, SageMaker).
+- **Batch process data** rather than relying on real-time streaming for everything.
+- **Monitor costs** aggressively and set auto-scaling limits.
+
+
+Here's a table summarizing all the cost considerations and associated prices based on the various components of the stack and the potential scaling risks:
+
+| **Component**                          | **Cost Type**                     | **Base Monthly Cost (Low Use)** | **Worst-Case Monthly Cost (High Scaling)** | **Prohibitive Factor**                                               | **Mitigation**                                  |
+|----------------------------------------|-----------------------------------|---------------------------------|--------------------------------------------|-----------------------------------------------------------------------|------------------------------------------------|
+| **Amazon Neptune**                     | Storage                           | $26                             | $28 (with daily growth)                   | None                                                                | N/A                                            |
+| **Amazon Neptune**                     | Compute (2 instances, r6g.8xlarge) | $492                            | $8,856 (with read replicas)               | High query load requires expensive replicas                          | Optimize queries, batch processing             |
+| **Amazon Neptune**                     | Data Transfer (intra-region)       | Free                            | N/A                                       | None                                                                | Keep all resources in the same region          |
+| **Neo4j (on EC2)**                     | Storage (260 GB, EBS)              | $20.8                           | $22.8 (with daily growth)                 | None                                                                | N/A                                            |
+| **Neo4j (on EC2)**                     | Compute (2 instances, r6g.8xlarge) | $347.2                          | $3,916.8 (add instances for write load)   | High write throughput requires extra compute                         | Tune write performance, batch updates          |
+| **Neo4j (on EC2)**                     | Data Transfer (intra-region)       | Free                            | N/A                                       | None                                                                | N/A                                            |
+| **TigerGraph (on EC2)**                | Storage (260 GB, EBS)              | $20.8                           | $22.8 (with daily growth)                 | None                                                                | N/A                                            |
+| **TigerGraph (on EC2)**                | Compute (4 instances, r6g.8xlarge) | $7,833.6                        | $12,854.4 (with licensing)                | Licensing fees + scaling compute for heavy queries                   | Consider managed services for deep link analytics |
+| **TigerGraph (on EC2)**                | Data Transfer (intra-region)       | Free                            | N/A                                       | None                                                                | N/A                                            |
+| **SageMaker (Training on ml.p3.2xlarge)** | Compute (4 hours/day)              | $492                            | $1,500 (with scaling)                     | Costs increase with automatic scaling, especially GPU use            | Limit training frequency, optimize for transfer learning |
+| **EC2 Compute (Training on p3.2xlarge)** | Compute (4 hours/day)              | $367.2                          | $1,468.8 (distributed training)           | Scaling distributed GPU instances leads to high costs                | Use EC2 spot instances, limit distributed training |
+| **Distributed PyTorch (on EC2)**       | Compute (4 p3.2xlarge instances)   | $1,468.8                        | $5,000 - $10,000                          | Large-scale distributed GNN training rapidly increases GPU usage     | Optimize data sharding, use transfer learning  |
+| **Amazon S3**                          | Storage (260 GB, feature data)     | $26                             | $28 (with daily growth)                   | None                                                                | N/A                                            |
+| **Amazon S3 Glacier**                  | Long-term storage                  | $0.004/GB                       | N/A                                       | Low cost, but retrieval adds latency and cost                         | Use for infrequent data access                 |
+| **Amazon EFS**                         | Storage (for fast-access data)     | $0.30/GB                        | $78/month for 260 GB                      | High cost for high-performance data access                           | Limit usage to fast-access data only           |
+| **AWS Kinesis**                        | Real-time data ingestion           | $108 (90M PUTs/month)           | $500 - $1,000 (depending on event volume) | High costs with high volume of real-time data ingestion               | Batch data ingestion to reduce PUT frequency   |
+| **Data Transfer (Cross-region)**       | Data transfer                      | $0.09/GB                        | $9/month (100 GB cross-region)            | Transferring large datasets between regions increases costs          | Keep resources within the same region          |
+| **AWS Glue (ETL for model training)**  | Processing                         | $0.44/DPU-hour                  | $150/month                                | Costs increase with more frequent ETL jobs                           | Use for batch ETL jobs instead of real-time    |
+| **SageMaker Hyperparameter Tuning**    | Compute (tuning jobs)              | $0.44/hour + training time      | $1,000+ (with frequent tuning)            | High costs for frequent tuning, especially on GPU-based models       | Use limited tuning ranges, caching strategies  |
+| **Fault Tolerance (Neo4j/TigerGraph)** | Redundant EC2 instances            | Doubles base compute costs      | $3,916.8 (Neo4j), $12,854.4 (TigerGraph)  | Redundant instances for HA can double EC2 costs                      | Consider managed solutions for redundancy      |
+| **Auto-scaling for compute (SageMaker/EC2)** | Compute scaling                    | Varies by load                  | $1,000+ (depending on traffic spikes)     | Unexpected scaling due to traffic spikes can lead to uncontrolled costs | Use auto-scaling limits, monitor cloud costs   |
+| **Operational Complexity (DevOps)**    | Labor costs                        | N/A                             | Highly variable                           | Manual management of Neo4j, TigerGraph increases operational overhead | Use managed services where possible            |
+
+---
+
+### **Summary**
+
+- **Most Expensive Components:**
+  - **TigerGraph on EC2** ($12,854.4/month) due to licensing and compute scaling.
+  - **Neptune with heavy read replicas** ($8,856/month) due to complex query scaling.
+  - **Distributed PyTorch (EC2)** ($5,000 - $10,000/month) with high GPU usage for training.
+
+- **Key Bottlenecks to Watch:**
+  - **Real-time data ingestion costs** with **AWS Kinesis**.
+  - **Auto-scaling risks** with **SageMaker** or **EC2** can lead to uncontrolled costs if not limited.
+  - **Operational complexity** for self-managed solutions like Neo4j and TigerGraph will increase labor costs.
+
+### Recommendations:
+
+- **Use managed services** like **Amazon Neptune** or **SageMaker** to reduce operational overhead and minimize scaling risks.
+- **Batch process** data whenever possible to reduce **Kinesis/real-time ingestion costs**.
+- **Optimize training frequency** and use **transfer learning** or **incremental training** to avoid full retraining every time data changes.
+
+By carefully planning for these potential cost spikes, you can avoid significant cost overruns while maintaining a scalable, high-performing fraud detection system.
+
 
 # User
-What is going to fuck us the most in each setup, i know data transfers between services can be pricey in some instances, include some more analysis for each option for scenarios like i mentioned.
+Ok now compare costs for what it would take to just experiment with GNNs and graph analytics with the same scale of data. So ignore the costs for serving, how much would it costs for training and modeling testing, and other analytics. Assume things still run daily.
 
-# Response
+For experimenting with GNNs and graph analytics using the same scale of data (ignoring production-serving costs), we need to focus on the **costs associated with training, model testing, and data processing**. Since we are considering daily runs, I will estimate **training**, **data preprocessing**, and **storage** costs, but exclude real-time inference and serving overhead.
 
-Great point—AWS pricing can get tricky, especially with hidden costs like **data transfer fees** and **inter-service communication overhead**. Here's a breakdown of potential pitfalls ("what’s going to fuck us the most") in each setup, with more focus on **data transfer** and hidden complexities.
+### Key Activities for Experimentation:
+1. **Data storage** (storing the graph, features, and intermediate results).
+2. **Data preprocessing** (ETL jobs to transform raw data into a format suitable for GNN training).
+3. **GNN model training** (running experiments with GNN architectures on GPUs/CPUs).
+4. **Model testing and evaluation** (e.g., hyperparameter tuning or batch testing of models).
 
----
-
-## **1. EC2 + Neptune**
-
-### **Potential Pitfalls:**
-
-- **Data Transfer Between Neptune and EC2:**
-  - **Issue:** If your EC2 instances and Neptune aren't in the same AWS region, you will get hit with **inter-region data transfer fees**. Even within the same region, data transfer between services like Neptune and EC2 isn't free and is billed as **regional data transfer** (typically $0.01/GB after 1GB).
-  - **Scenario:** 1TB of data moved between Neptune and EC2 during a daily training run could cost **$10/day**, or **$300/month**. It’s not huge, but it stacks up quickly with large datasets.
-
-- **I/O Limits on Neptune:**
-  - **Issue:** Neptune is primarily an OLTP (transactional) graph database, and if you’re performing high I/O graph traversals to get features (e.g., querying large subgraphs for training), Neptune’s performance could bottleneck. Neptune shines in **read-heavy** applications but may choke on complex analytical queries, causing slower data access during training.
-
-- **EBS on EC2:**
-  - **Issue:** EC2 instances with EBS-backed storage could also slow down during heavy I/O operations. You might need **Provisioned IOPS EBS** for better performance, which costs way more than standard gp2/gp3 volumes (up to **$0.125 per provisioned IOPS/GB**). If you need fast storage for intermediate graph data on EC2, this can balloon storage costs.
-
-### **Worst-case Cost Impact:**
-- **Data transfer fees** could add up to **$300/month** or more if not managed correctly (especially if crossing regions or needing to move large batches of data).
-- **I/O bottlenecks on Neptune** could lead to performance issues, forcing you to scale out more compute instances, adding to costs.
+### Assumptions:
+- **Graph size:** 10 billion edges, 3 billion nodes, with 5 features per node and edge.
+- **Daily data growth:** 800,000 nodes and 2 million edges added per day.
+- **Features per node/edge:** 20 bytes (5 features per node/edge, 4 bytes per feature).
+- **Daily experiments:** Assume daily model training and testing to be part of the experimental process.
+- **Preprocessing and ETL:** Daily ETL job for preprocessing the graph data for model input.
 
 ---
 
-## **2. SageMaker + Neptune**
+## 1. **Storage Costs (Amazon S3)**
 
-### **Potential Pitfalls:**
+### **Initial Data Storage:**
+- **Total Data Size:** (3 billion nodes * 20 bytes) + (10 billion edges * 20 bytes) = 60 GB + 200 GB = **260 GB**.
 
-- **SageMaker Training Data Loading from Neptune (Data Transfer Costs):**
-  - **Issue:** SageMaker and Neptune aren’t tightly integrated, so you’ll probably need to **export Neptune data to S3** and then read it into SageMaker. That involves multiple data transfers: Neptune → S3 and then S3 → SageMaker.
-  - **Scenario:** If you’re exporting 1TB of graph data from Neptune to S3 daily, you could be charged for data transfer (Neptune to S3) and S3 access costs. This adds **$90/month** for transfers alone.
-  - **S3 to SageMaker** incurs **$0.023 per GB** retrieval, costing **$23/TB/month** for loading training data, plus **$0.01/GB** for the data to SageMaker.
+### **Daily Data Growth:**
+- **Daily increase in nodes/edges:** 56 MB/day (as calculated earlier).
 
-- **SageMaker Pricing and Job Idle Time:**
-  - **Issue:** SageMaker charges for **every second** your training instance is running, including setup time, hyperparameter tuning, and any idle time while waiting for data. If data is not ready or if there are bottlenecks between data transfer from S3, you’ll end up paying for idle GPU time.
-  - **Scenario:** If SageMaker runs 10% more idle time due to data transfer delays, that could mean **$137/month** more in training costs (10% of the $1,374 baseline).
+### **Total Monthly Data Storage:**
+- **Initial data + daily growth:** \( 260 \text{ GB} + 30 \times 56 \text{ MB} = 261.68 \text{ GB} \).
 
-- **Model Deployment with Real-time Inference Costs:**
-  - **Issue:** Deploying the model for real-time inference means you’ll be charged for **inference endpoint uptime**, and the more instances you deploy, the higher the cost. If you're pushing predictions at scale, those costs stack up fast.
-  - **Scenario:** Adding an additional inference endpoint on top of your original estimate could cost **$540/month**.
+### **Cost:**
+- **S3 Pricing (Standard Tier):** $0.023/GB per month.
+- **Cost for 261.68 GB:** \(261.68 \times 0.023 = \text{\$6.02/month}\).
 
-### **Worst-case Cost Impact:**
-- **Data transfer costs** could easily push you into an extra **$150-300/month** range.
-- **Idle time on SageMaker** if the data transfer is slow could add an extra **$137/month** or more.
-- **Total overheads**: Expect potential **$400-600/month** in hidden fees.
+### **Worst-Case Growth (End of Year):**
+- Assuming 1 year of daily growth at 56 MB/day:
+  - \(260 \text{ GB} + 365 \times 56 \text{ MB} = 280.44 \text{ GB}\).
+  - Annual cost: \(280.44 \times 0.023 = \text{\$6.45/month}\).
 
 ---
 
-## **3. EC2 + Neo4j**
+## 2. **ETL/Preprocessing Costs (AWS Glue or EMR)**
 
-### **Potential Pitfalls:**
+### **AWS Glue ETL Jobs:**
+- **Assumed ETL Job:** Preprocesses raw data into node/edge features suitable for GNN training.
+- **DPU Hours:** Glue pricing is based on **DPU (Data Processing Units)**. Let’s assume the job requires 4 DPUs and runs for 1 hour per day.
 
-- **Managing Data Transfer Between EC2 and S3:**
-  - **Issue:** Neo4j doesn’t have built-in AWS integrations, so if you're syncing data with S3 (e.g., backups, logs), expect manual data transfers. This could introduce transfer fees (EC2 → S3 at **$0.01/GB**).
-  - **Scenario:** If you back up 1TB per day to S3, this results in **$300/month** in data transfer fees.
+### **Cost:**
+- **AWS Glue Pricing:** $0.44 per DPU-hour.
+- **Cost per day:** \(4 \text{ DPUs} \times 0.44 = 1.76\) USD/day.
+- **Cost per month:** \(1.76 \times 30 = \text{\$52.8/month}\).
+
+### **Worst-Case Scaling (Heavier ETL Workload):**
+- If we assume 8 DPUs are required for more complex feature engineering:
+  - \(8 \times 0.44 = 3.52\) USD/day.
+  - **Cost per month:** \(3.52 \times 30 = \text{\$105.6/month}\).
+
+---
+
+## 3. **Model Training Costs (SageMaker or EC2)**
+
+### **Single Instance Training:**
+- **Assumed Model:** GNN with moderate complexity (e.g., GraphSAGE, GCN).
+- **Training Time:** 4 hours/day on **ml.p3.2xlarge** instance (8 vCPUs, 1 GPU).
+- **Training Framework:** TensorFlow GNN, PyTorch Geometric, or DGL.
   
-- **Neo4j Licensing Costs and Scaling Limits:**
-  - **Issue:** Neo4j’s enterprise edition is costly (~**$10k+ per year**), and the **self-hosting overhead** increases as your graph grows. As your graph grows beyond 10 billion edges, scaling could require more EC2 instances, dramatically raising the cost.
-  - **Scenario:** If the graph requires an additional **r5.4xlarge** instance, that’s **$691/month** extra, just to handle the increased load.
+### **Cost (SageMaker):**
+- **SageMaker Pricing (ml.p3.2xlarge):** $4.10/hour.
+- **Cost per day:** \(4.10 \times 4 = 16.4\) USD/day.
+- **Cost per month:** \(16.4 \times 30 = \text{\$492/month}\).
 
-- **EBS Storage for High Throughput:**
-  - **Issue:** Neo4j is often run on high IOPS storage (Provisioned IOPS on EBS) to handle heavy read/write operations on large graphs. Provisioning high IOPS is expensive, adding **$0.125/GB for IOPS**.
-  - **Scenario:** Adding provisioned IOPS for 1TB of storage could increase costs by **$125/month**, on top of standard storage fees.
+### **Cost (EC2):**
+- **EC2 Pricing (p3.2xlarge):** $3.06/hour (on-demand).
+- **Cost per day:** \(3.06 \times 4 = 12.24\) USD/day.
+- **Cost per month:** \(12.24 \times 30 = \text{\$367.2/month}\).
 
-### **Worst-case Cost Impact:**
-- **Data transfer costs** (EC2 → S3) for backups could easily add **$300/month**.
-- **Scaling EC2 instances** for larger graphs could cost an additional **$691/month**.
-- **Total overheads**: Worst case, expect **$900-1,000/month** in hidden costs due to scaling and data management.
+### **Distributed Training for Large Graphs:**
+- If more instances are required for training large-scale GNNs (e.g., 4 instances of p3.2xlarge):
+  - \(3.06 \times 4 \times 4 = 48.96\) USD/day.
+  - **Cost per month:** \(48.96 \times 30 = \text{\$1,468.8/month}\).
 
----
-
-## **4. SageMaker + TigerGraph**
-
-### **Potential Pitfalls:**
-
-- **TigerGraph Licensing and Compute Costs:**
-  - **Issue:** TigerGraph’s enterprise features, especially for high-performance, distributed graph analytics, are **license-based** and can be costly (~**$15k+ per year**). If you need to scale up your graph, you’ll quickly run into expensive compute costs.
-  - **Scenario:** Additional TigerGraph licenses and compute nodes could easily add **$1,500/month** in hidden costs as your graph grows.
-
-- **Data Transfer Between TigerGraph and SageMaker:**
-  - **Issue:** Just like Neptune, TigerGraph doesn’t natively integrate with SageMaker, so you’ll need to export graph data to S3 for model training. Moving large datasets (e.g., 1TB/day) between TigerGraph, S3, and SageMaker incurs transfer fees.
-  - **Scenario:** If you export 1TB/day to S3, you could face **$300/month** in data transfer fees between TigerGraph and S3, and additional costs when retrieving data for training.
-
-- **SageMaker Tuning and Idle Time:**
-  - **Issue:** As with Neptune, you’ll face idle time during SageMaker training jobs, especially if data transfers are slow. **Tuning models** for hyperparameter optimization can also drag on, inflating costs.
-  - **Scenario:** If idle time increases by 10%, that could be **$190/month** more, on top of regular SageMaker costs.
-
-### **Worst-case Cost Impact:**
-- **TigerGraph licensing and compute costs** could easily balloon to **$1,500/month**.
-- **Data transfer overhead** (1TB/day to/from S3) could add **$300/month**.
-- **Total overheads**: Hidden fees and scaling could push the extra costs to **$1,800-2,000/month**.
+### **Worst-Case for Complex Models (More Training Time/Resources):**
+- If 8 hours/day of training is needed with distributed instances (4x p3.2xlarge):
+  - \(3.06 \times 4 \times 8 = 97.92\) USD/day.
+  - **Cost per month:** \(97.92 \times 30 = \text{\$2,937.6/month}\).
 
 ---
 
-## **5. Spark on AWS EMR + S3**
+## 4. **Model Testing and Hyperparameter Tuning Costs**
 
-### **Potential Pitfalls:**
+### **Hyperparameter Tuning (SageMaker):**
+- **SageMaker Hyperparameter Tuning Job:** Let’s assume each tuning job uses 4 instances of **ml.p3.2xlarge** for 4 hours.
+- **Cost per job:** \(4 \times 4.10 \times 4 = 65.6\) USD per job.
+- **Run one job per week:** \(65.6 \times 4 = \text{\$262.4/month}\).
 
-- **Data Transfer Between S3 and EMR:**
-  - **Issue:** While AWS offers free data transfer within the same region, moving large datasets to/from S3 and between EMR clusters could incur additional fees. If you're streaming data, this could add up fast.
-  - **Scenario:** For example, moving 1TB/day between S3 and EMR clusters could add **$300/month** in transfer fees.
-
-- **EMR Cluster Scaling:**
-  - **Issue:** Scaling out EMR clusters for processing large graphs (10 billion edges) requires significant resources, and costs spike with additional instances. Also, high I/O operations in Spark could require **HDFS** replication, further increasing storage costs.
-  - **Scenario:** A fully scaled-out cluster might add **$500-1,000/month** if you need to expand beyond 10 nodes due to I/O demands.
-
-- **Idle Nodes and Job Scheduling:**
-  - **Issue:** If Spark jobs aren't optimized for scheduling, you’ll end up paying for idle nodes while waiting for data or processing steps to complete. This is especially problematic for real-time use cases where jobs run sporadically.
-  - **Scenario:** If 10% of your cluster’s uptime is idle due to poor job scheduling, that could mean **$138/month** more in costs.
-
-### **Worst-case Cost Impact:**
-- **Data transfer fees
-
-** (S3 ↔ EMR) could add **$300/month**.
-- **Scaling EMR clusters** for higher I/O could add **$500-1,000/month**.
-- **Total overheads**: Expect an extra **$800-1,300/month** in potential hidden fees.
+### **Worst-Case Scenario (Frequent Tuning):**
+- If tuning jobs are run daily for 4 hours (instead of weekly):
+  - **Cost per month:** \(65.6 \times 30 = \text{\$1,968/month}\).
 
 ---
 
-## **Summary of “What’s Going to Fuck Us” by Setup:**
+## 5. **Summary of Experimental Costs**
 
-| **Option**              | **Major Issue**                                      | **Worst-case Overhead (monthly)** |
-|-------------------------|-----------------------------------------------------|----------------------------------|
-| **EC2 + Neptune**        | Data transfer fees, I/O bottlenecks on Neptune       | $300-600/month                  |
-| **SageMaker + Neptune**  | Data transfer to S3, SageMaker idle time             | $400-600/month                  |
-| **EC2 + Neo4j**          | Licensing, scaling Neo4j, data transfers             | $900-1,000/month                |
-| **SageMaker + TigerGraph**| TigerGraph licensing, data transfers, compute costs  | $1,800-2,000/month              |
-| **Spark on EMR + S3**    | Data transfer fees, scaling EMR clusters, idle nodes | $800-1,300/month                |
+| **Component**                          | **Cost Type**                     | **Base Monthly Cost (Low Use)** | **Worst-Case Monthly Cost (High Scaling)** | **Prohibitive Factor**                                               |
+|----------------------------------------|-----------------------------------|---------------------------------|--------------------------------------------|-----------------------------------------------------------------------|
+| **Amazon S3**                          | Storage (260 GB)                  | $6.02                           | $6.45 (with growth)                        | None                                                                |
+| **AWS Glue (ETL/Preprocessing)**       | Compute (4 DPUs, 1 hour/day)      | $52.8                           | $105.6 (with heavier workloads)            | Scaling data transformations                                         |
+| **SageMaker (Training on p3.2xlarge)** | Compute (4 hours/day)             | $492                            | $1,500 (with scaling)                     | Costs rise with complex models, distributed training                  |
+| **EC2 (Training on p3.2xlarge)**       | Compute (4 hours/day)             | $367.2                          | $1,468.8 (distributed training)            | Scaling distributed GPU usage                                        |
+| **SageMaker Hyperparameter Tuning**    | Compute (tuning jobs)             | $262.4 (weekly jobs)            | $1,968 (daily tuning jobs)                 | Frequent tuning can cause cost escalation                             |
 
 ---
 
-### **TL;DR:**
-- **EC2 + Neptune** and **SageMaker + Neptune** are the least risky cost-wise, but **data transfer fees** and **I/O bottlenecks** still pose problems.
-- **Neo4j and TigerGraph** are high-risk, especially with licensing and compute scaling, leading to hefty hidden costs.
-- **EMR + Spark** can incur surprise fees due to **cluster scaling** and **data transfer**, particularly when processing large datasets.
+### **Summary of Total Costs for Experimentation**
 
-Let me know if you need further details on any of these!
+- **Low Use Case (Base Costs for Daily Experiments):**
+  - **Storage:** $6.02/month.
+  - **ETL Preprocessing (AWS Glue):** $52.8/month.
+  - **Model Training (SageMaker):** $492/month.
+  - **Hyperparameter Tuning (Weekly):** $262.4/month.
+  - **Total Monthly Cost (Low Use):** **$813.22/month**.
+
+- **High Use Case (More Frequent Training and Testing):**
+  - **Storage (End of Year Growth):** $6.45/month.
+  - **ETL Preprocessing (Heavier Workloads):** $105.6/month.
+  - **Model Training (Distributed on EC2):** $1,468.8/month.
+  - **Hyperparameter Tuning (Daily):** $1,968/month.
+  - **Total Monthly Cost (High Use):** **$3,548.85/month**.
+
+---
+
+### **Key Insights for Experimentation Costs:**
+
+1. **Training Costs:** Model training and distributed GPU costs (whether on SageMaker or EC2) are the largest portion of the experimental costs, and they can skyrocket with frequent or more complex training needs.
+2. **Preprocessing Costs:** AWS Glue offers an affordable option for daily ETL, but heavy workloads could double this cost.
+3. **Tuning Costs:** Hyperparameter tuning, especially if done frequently, can significantly add to the experimentation budget.
+4. **Storage Costs:** Storage costs are relatively low, even with growth, but should be monitored for long-term retention of model artifacts and raw data.
+
+---
+
+
+
+**Conclusion:** For experimentation purposes, the base costs are reasonable (around $813/month), but they can scale up quickly if model training becomes more complex, or hyperparameter tuning is run frequently.
+
